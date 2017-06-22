@@ -23,7 +23,8 @@ var wpconfig = {
         CourseSock: './openedx/features/course_experience/static/course_experience/js/CourseSock.js',
         CourseTalkReviews: './openedx/features/course_experience/static/course_experience/js/CourseTalkReviews.js',
         WelcomeMessage: './openedx/features/course_experience/static/course_experience/js/WelcomeMessage.js',
-        Import: './cms/static/js/features/import/factories/import.js'
+        Import: './cms/static/js/features/import/factories/import.js',
+        StudioIndex: './cms/static/js/features/index.js'
     },
 
     output: {
@@ -95,7 +96,7 @@ var wpconfig = {
                 )
             },
             {
-                test: /\.(js|jsx)$/,
+                test: /\.js$/,
                 exclude: [
                     /node_modules/,
                     namespacedRequireFiles
