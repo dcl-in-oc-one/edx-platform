@@ -24,7 +24,7 @@ var wpconfig = {
         CourseTalkReviews: './openedx/features/course_experience/static/course_experience/js/CourseTalkReviews.js',
         WelcomeMessage: './openedx/features/course_experience/static/course_experience/js/WelcomeMessage.js',
         Import: './cms/static/js/features/import/factories/import.js',
-        StudioIndex: './cms/static/js/features_jsx/index.js'
+        StudioIndex: './cms/static/js/features_jsx/studio/index.js'
     },
 
     output: {
