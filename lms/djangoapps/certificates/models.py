@@ -57,6 +57,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Count
 from django.dispatch import receiver
+from opaque_keys.edx.locator import CourseKey
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField
 from model_utils import Choices
@@ -500,33 +501,33 @@ def certificate_status_for_student(student, course_id):
         generated_certificate = GeneratedCertificate.objects.get(user=student, course_id=course_id)
     except GeneratedCertificate.DoesNotExist:
         generated_certificate = None
-    return certificate_status(generated_certificate)
+    return certificate_status(generated_certificate, course_id)
 
 
-def certificate_status(generated_certificate):
+def certificate_status(generated_certificate, course_id):
     '''
     This returns a dictionary with a key for status, and other information.
     The status is one of the following:
 
-    unavailable  - No entry for this student--if they are actually in
-                   the course, they probably have not been graded for
-                   certificate generation yet.
-    generating   - A request has been made to generate a certificate,
-                   but it has not been generated yet.
-    regenerating - A request has been made to regenerate a certificate,
-                   but it has not been generated yet.
-    deleting     - A request has been made to delete a certificate.
+    unavailable     - No entry for this student--if they are actually in
+                      the course, they probably have not been graded for
+                      certificate generation yet.
+    generating      - A request has been made to generate a certificate,
+                      but it has not been generated yet.
+    regenerating    - A request has been made to regenerate a certificate,
+                      but it has not been generated yet.
+    deleting        - A request has been made to delete a certificate.
 
-    deleted      - The certificate has been deleted.
-    downloadable - The certificate is available for download.
-    notpassing   - The student was graded but is not passing
-    restricted   - The student is on the restricted embargo list and
-                   should not be issued a certificate. This will
-                   be set if allow_certificate is set to False in
-                   the userprofile table
-    unverified   - The student is in verified enrollment track and
-                   the student did not have their identity verified,
-                   even though they should be eligible for the cert otherwise.
+    deleted         - The certificate has been deleted.
+    downloadable    - The certificate is available for download.
+    notpassing      - The student was graded but is not passing
+    restricted      - The student is on the restricted embargo list and
+                      should not be issued a certificate. This will
+                      be set if allow_certificate is set to False in
+                      the userprofile table
+    unverified      - The student is in verified enrollment track and
+                      the student did not have their identity verified,
+                      even though they should be eligible for the cert otherwise.
 
     If the status is "downloadable", the dictionary also contains
     "download_url".
@@ -537,6 +538,10 @@ def certificate_status(generated_certificate):
     # Import here instead of top of file since this module gets imported before
     # the course_modes app is loaded, resulting in a Django deprecation warning.
     from course_modes.models import CourseMode
+    from lms.djangoapps.courseware.courses import get_course_by_id
+
+    if not get_course_by_id(course_id).may_certify():
+        return {'status': CertificateStatuses.unavailable, 'mode': GeneratedCertificate.MODES.honor, 'uuid': None}
 
     if generated_certificate:
         cert_status = {
@@ -572,7 +577,7 @@ def certificate_info_for_user(user, grade, user_is_whitelisted, user_certificate
     eligible_for_certificate = 'Y' if (user_is_whitelisted or grade is not None) and user.profile.allow_certificate \
         else 'N'
 
-    status = certificate_status(user_certificate)
+    status = certificate_status(user_certificate, user_certificate.course_id)
     certificate_generated = status['status'] == CertificateStatuses.downloadable
     if certificate_generated:
         certificate_is_delivered = 'Y'

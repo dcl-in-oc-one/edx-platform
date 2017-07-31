@@ -213,6 +213,8 @@ class TestUserEnrollmentApi(UrlResetMixin, MobileAPITestCase, MobileAuthUserTest
         self.login_and_enroll()
 
         certificate_url = "http://test_certificate_url"
+        self.course.end = datetime.datetime.now()
+        self.course.set_default_certificate_available_date()
         GeneratedCertificateFactory.create(
             user=self.user,
             course_id=self.course.id,

@@ -231,6 +231,7 @@ def certificate_downloadable_status(student, course_key):
         'is_generating': True if current_status['status'] in [CertificateStatuses.generating,
                                                               CertificateStatuses.error] else False,
         'is_unverified': True if current_status['status'] == CertificateStatuses.unverified else False,
+        'is_unavailable': True if current_status['status'] == CertificateStatuses.unavailable else False,
         'download_url': None,
         'uuid': None,
     }
