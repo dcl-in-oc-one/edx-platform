@@ -381,31 +381,8 @@ class TestCourseIndexArchived(CourseTestCase):
         parsed_html = lxml.html.fromstring(index_response.content)
         course_tab = parsed_html.find_class('courses')
         self.assertEqual(len(course_tab), 1)
-        course_links = course_tab[0].find_class('course-link')
-        course_titles = course_tab[0].find_class('course-title')
         archived_course_tab = parsed_html.find_class('archived-courses')
-
-        if separate_archived_courses:
-            # Archived courses should be separated from the main course list
-            self.assertEqual(len(archived_course_tab), 1)
-            archived_course_links = archived_course_tab[0].find_class('course-link')
-            archived_course_titles = archived_course_tab[0].find_class('course-title')
-            self.assertEqual(len(archived_course_links), 1)
-            self.assertEqual(len(archived_course_titles), 1)
-            self.assertEqual(archived_course_titles[0].text, 'Archived Course')
-
-            self.assertEqual(len(course_links), 2)
-            self.assertEqual(len(course_titles), 2)
-            self.assertEqual(course_titles[0].text, 'Active Course 1')
-            self.assertEqual(course_titles[1].text, 'Active Course 2')
-        else:
-            # Archived courses should be included in the main course list
-            self.assertEqual(len(archived_course_tab), 0)
-            self.assertEqual(len(course_links), 3)
-            self.assertEqual(len(course_titles), 3)
-            self.assertEqual(course_titles[0].text, 'Active Course 1')
-            self.assertEqual(course_titles[1].text, 'Active Course 2')
-            self.assertEqual(course_titles[2].text, 'Archived Course')
+        self.assertEqual(len(archived_course_tab), 1 if separate_archived_courses else 0)
 
     @ddt.data(
         # Staff user has course staff access
