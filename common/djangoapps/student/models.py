@@ -1677,17 +1677,36 @@ class CourseEnrollment(models.Model):
         Returns:
             datetime|None
         """
+        log.debug('Determining upgrade deadline for CourseEnrollment %d...', self.id)
+
         if not CourseMode.is_mode_upgradeable(self.mode):
+            log.debug(
+                '%s mode of %s is not upgradeable. Returning None for upgrade deadline.', self.mode, self.course_id
+            )
             return None
 
         try:
             if self.schedule:
+                log.debug(
+                    'Pulling upgrade deadline for CourseEnrollment %d from Schedule %d.', self.id, self.schedule.id
+                )
                 return self.schedule.upgrade_deadline
         except ObjectDoesNotExist:
+            log.debug('No schedule exists for CourseEnrollment %d.', self.id)
             pass
 
-        verified_mode = CourseMode.objects.get(course_id=self.course_id, mode_slug=CourseMode.VERIFIED)
-        return verified_mode.expiration_datetime
+        try:
+            verified_mode = CourseMode.verified_mode_for_course(self.course_id)
+
+            if verified_mode:
+                log.debug('Defaulting to verified mode expiration date-time for %s.', self.course_id)
+                return verified_mode.expiration_datetime
+        except CourseMode.DoesNotExist:
+            log.debug('%s has no verified mode.', self.course_id)
+            pass
+
+        log.debug('Returning default of `None`')
+        return None
 
     def is_verified_enrollment(self):
         """
